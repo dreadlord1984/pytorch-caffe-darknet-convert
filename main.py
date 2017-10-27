@@ -112,11 +112,33 @@ def main():
 #            model = resnet_model.resnet50_new(pretrained=True) 
 #            print('save resnet50 to resnet50.weights')
 #            model.saveas_darknet_weights('resnet50.weights')
-        if args.arch == 'resnet50-darknet':
+        if args.arch == 'resnet50-pytorch':
+            model = models.resnet50(pretrained=True) 
+        elif args.arch == 'resnet50-darknet':
             from darknet import Darknet
             model = Darknet('cfg/resnet50.cfg')
             print('load weights from resnet50.weights')
             model.load_weights('resnet50.weights')
+        elif args.arch == 'resnet50-caffe2darknet':
+            from darknet import Darknet
+            model = Darknet('resnet50-caffe2darknet.cfg')
+            print('load weights from resnet50-caffe2darknet.weights')
+            model.load_weights('resnet50-caffe2darknet.weights')
+        elif args.arch == 'vgg16-pytorch2darknet':
+            from darknet import Darknet
+            model = Darknet('vgg16-pytorch2darknet.cfg')
+            print('load weights from vgg16-pytorch2darknet.weights')
+            model.load_weights('vgg16-pytorch2darknet.weights')
+        elif args.arch == 'resnet50-pytorch2caffe':
+            from caffenet import CaffeNet
+            model = CaffeNet('resnet50-pytorch2caffe.prototxt')
+            print('load weights resnet50-pytorch2caffe.caffemodel')
+            model.load_weights('resnet50-pytorch2caffe.caffemodel')
+        elif args.arch == 'resnet50-darknet2caffe':
+            from caffenet import CaffeNet
+            model = CaffeNet('resnet50-darknet2caffe.prototxt')
+            print('load weights resnet50-darknet2caffe.caffemodel')
+            model.load_weights('resnet50-darknet2caffe.caffemodel')
         elif args.arch == 'resnet50-kaiming':
             from caffenet import CaffeNet
             model = CaffeNet('ResNet-50-deploy.prototxt')
@@ -153,8 +175,11 @@ def main():
             model = models.__dict__[args.arch]()
 
     if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
-        model.features = torch.nn.DataParallel(model.features)
-        model.cuda()
+        if args.arch != 'vgg16-pytorch2darknet':
+            model.features = torch.nn.DataParallel(model.features)
+            model.cuda()
+        else:
+            model = torch.nn.DataParallel(model).cuda()
     else:
         model = torch.nn.DataParallel(model).cuda()
 
